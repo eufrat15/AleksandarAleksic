@@ -3,9 +3,12 @@ package com.example.androiddevelopment.myapplication;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -27,7 +30,9 @@ import android.widget.Toast;
 import com.example.androiddevelopment.myapplication.db.DatabaseHelper;
 import com.example.androiddevelopment.myapplication.db.model.TuristickaAtrakcija;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.Dao;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +49,6 @@ public class FirstActivity extends AppCompatActivity implements NavigationView.O
 
     private ImageView preview;
     private String imagePath = null;
-
-
-
 
 
     @Override
@@ -108,98 +110,98 @@ public class FirstActivity extends AppCompatActivity implements NavigationView.O
 
     }
 
-        @Override
-        public boolean onCreateOptionsMenu(Menu menu) {
-            getMenuInflater().inflate(R.menu.menu_first, menu);
-            return super.onCreateOptionsMenu(menu);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_first, menu);
+        return super.onCreateOptionsMenu(menu);
 
-        }
+    }
 
 
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            switch (item.getItemId()) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
 
-                case R.id.action_add:
+            case R.id.action_add:
 
-                    final Dialog dialog = new Dialog(FirstActivity.this);
-                    dialog.setContentView(R.layout.dialog_turistickaatrakcija);
+                final Dialog dialog = new Dialog(FirstActivity.this);
+                dialog.setContentView(R.layout.dialog_turistickaatrakcija);
 
-                    Button choosebtn = (Button) dialog.findViewById(R.id.btn_choose);
-                    choosebtn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            preview = (ImageView) dialog.findViewById(R.id.preview_image);
-                            selectPicture();
+                Button choosebtn = (Button) dialog.findViewById(R.id.btn_choose);
+                choosebtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        preview = (ImageView) dialog.findViewById(R.id.preview_image);
+                        selectPicture();
+                    }
+
+                });
+
+                final EditText taNaziv = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_naziv);
+                final EditText taOpis = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_opis);
+                final EditText taPostanskaAdresa = (EditText) dialog.findViewById(R.id.input_turistickaagencija_posta);
+                final EditText taTelefon = (EditText) dialog.findViewById(R.id.input_turistickaagencija_telefon);
+                final EditText taWeb = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_web);
+                final EditText taCena = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_cena);
+                final EditText taKomentar = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_komentar);
+
+                Button save = (Button) dialog.findViewById(R.id.btn_save);
+                save.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        String naziv = taNaziv.getText().toString();
+                        if (naziv.isEmpty()) {
+                            Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
+                            return;
                         }
 
-                    });
-
-                    final EditText taNaziv = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_naziv);
-                    final EditText taOpis = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_opis);
-                    final EditText taPostanskaAdresa = (EditText) dialog.findViewById(R.id.input_turistickaagencija_posta);
-                    final EditText taTelefon = (EditText) dialog.findViewById(R.id.input_turistickaagencija_telefon);
-                    final EditText taWeb = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_web);
-                    final EditText taCena = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_cena);
-                    final EditText taKomentar = (EditText) dialog.findViewById(R.id.input_turistickaatrakcija_komentar);
-
-                    Button save = (Button) dialog.findViewById(R.id.btn_save);
-                    save.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            String naziv = taNaziv.getText().toString();
-                            if (naziv.isEmpty()) {
-                                Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            String opis = taOpis.getText().toString();
-                            if (opis.isEmpty()) {
-                                Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
+                        String opis = taOpis.getText().toString();
+                        if (opis.isEmpty()) {
+                            Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
 
-                            int postanskaadresa = 0;
-                            try {
-                                postanskaadresa = Integer.parseInt(taTelefon.getText().toString());
-                            } catch (NumberFormatException e) {
-                                Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
+                        int postanskaadresa = 0;
+                        try {
+                            postanskaadresa = Integer.parseInt(taTelefon.getText().toString());
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                            int telefon = 0;
-                            try {
-                                telefon = Integer.parseInt(taTelefon.getText().toString());
-                            } catch (NumberFormatException e) {
-                                Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
+                        int telefon = 0;
+                        try {
+                            telefon = Integer.parseInt(taTelefon.getText().toString());
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                            String web = taWeb.getText().toString();
-                            if (web.isEmpty()) {
-                                Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-
-                            double cena = 0;
-                            try {
-                                cena = Double.parseDouble(taCena.getText().toString());
-                            } catch (NumberFormatException e) {
-                                Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
+                        String web = taWeb.getText().toString();
+                        if (web.isEmpty()) {
+                            Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
 
-                            String komentar = taKomentar.getText().toString();
-                            if (komentar.isEmpty()) {
-                                Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
+                        double cena = 0;
+                        try {
+                            cena = Double.parseDouble(taCena.getText().toString());
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(FirstActivity.this, "Must be number.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                            if (preview == null || imagePath == null) {
+
+                        String komentar = taKomentar.getText().toString();
+                        if (komentar.isEmpty()) {
+                            Toast.makeText(FirstActivity.this, "Must be entered", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        if (preview == null || imagePath == null) {
                             Toast.makeText(FirstActivity.this, "Picture must be choose", Toast.LENGTH_SHORT).show();
                             return;
                         }
@@ -211,50 +213,186 @@ public class FirstActivity extends AppCompatActivity implements NavigationView.O
                         turistickaAtrakcija.setmPosta(postanskaadresa);
                         turistickaAtrakcija.setmTelefon(telefon);
                         turistickaAtrakcija.setmWeb(web);
-                        //turistickaAtrakcija.setmRadnovreme();
+                        turistickaAtrakcija.setmCena(cena);
+                        turistickaAtrakcija.setmKomentar(komentar);
 
+                        try {
+                            getDatabaseHelper().getmRealEstateDao().create(TuristickaAtrakcija);
+
+
+                            boolean toast = preferences.getBoolean(NOTIF_TOAST, false);
+                            boolean status = preferences.getBoolean(NOTIF_STATUS, false);
+
+                            if (toast) {
+                                Toast.makeText(FirstActivity.this, "Nova Turisticka Atrakcija dodata", Toast.LENGTH_SHORT).show();
+                            }
+
+                            reset();
+
+                            refresh();
+
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+
+                        dialog.dismiss();
 
                     }
+                });
+
+                Button cancel = (Button) dialog.findViewById(R.id.btn_cancel);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
 
 
+                        boolean toast = preferences.getBoolean(NOTIF_TOAST, false);
+                        boolean status = preferences.getBoolean(NOTIF_STATUS, false);
+
+                        if (toast) {
+                            Toast.makeText(FirstActivity.this, "Nova Turisticka Atrakcija canceled", Toast.LENGTH_SHORT).show();
+                        }
+
+                        refresh();
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
+
+                break;
 
 
-
-
-
-    public DatabaseHelper getDatabaseHelper() {
-        if (databaseHelper == null) {
-            databaseHelper = OpenHelperManager.getHelper(this, DatabaseHelper.class);
-        }
-        return databaseHelper;
-    }
-
-    private void selectPicture() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
-    }
-
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-        if (id == R.id.nav_list) {
-
-        } else if (id == R.id.nav_settings) {
-
-            Intent intent = new Intent(FirstActivity.this, SettingsActivity.class);
-            startActivity(intent);
-
+        public DatabaseHelper getDatabaseHelper () {
+            if (databaseHelper == null) {
+                databaseHelper = OpenHelperManager.getHelper(this, DatabaseHelper.class);
+            }
+            return databaseHelper;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
+        private void refresh () {
+            ListView listview = (ListView) findViewById(R.id.list_first_activity);
+            if (listview != null) {
+                ArrayAdapter<TuristickaAtrakcija> adapter = (ArrayAdapter<TuristickaAtrakcija>) listview.getAdapter();
+                if (adapter != null) {
+                    adapter.clear();
+                    try {
+                        List<TuristickaAtrakcija> list = getDatabaseHelper().getmRealEstateDao().queryForAll();
+                        adapter.addAll(list);
+                        adapter.notifyDataSetChanged();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        }
+
+        private void reset () {
+            imagePath = "";
+            preview = null;
+        }
+
+        private void selectPicture () {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
+        }
+
+        public void onActivityResult ( int requestCode, int resultCode, Intent data){
+            if (resultCode == RESULT_OK) {
+                if (requestCode == SELECT_PICTURE) {
+                    Uri selectedImageUri = data.getData();
+
+                    try {
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
+                        if (selectedImageUri != null) {
+                            imagePath = selectedImageUri.toString();
+                        }
+
+                        if (preview != null) {
+                            preview.setImageBitmap(bitmap);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onBackPressed () {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                super.onBackPressed();
+            }
+        }
+
+
+        @SuppressWarnings("StatementWithEmptyBody")
+        @Override
+        public boolean onNavigationItemSelected (MenuItem item){
+
+            int id = item.getItemId();
+
+            if (id == R.id.nav_list) {
+
+            } else if (id == R.id.nav_settings) {
+
+                Intent intent = new Intent(FirstActivity.this, SettingsActivity.class);
+                startActivity(intent);
+
+            }
+
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
+        }
+
+        public Dao<TuristickaAtrakcija, Integer> getmTuristickaAtrakcijaDao () throws
+        SQLException {
+            if (mTuristickaAtrakcijaDao == null) {
+                getmTuristickaAtrakcijaDao = getDao(TuristickaAtrakcija.class);
+            }
+
+            return mRealEstateDao;
+        }
+
+        @Override
+        public void close () {
+            mTuristickaAtrakcijaDao = null;
+
+            super.close();
+
+        }
+
+        @Override
+        public void setTitle (CharSequence title){
+            getSupportActionBar().setTitle(title);
+        }
+
+
+        @Override
+        protected void onResume () {
+            super.onResume();
+            refresh();
+        }
+
+        @Override
+        protected void onDestroy () {
+            super.onDestroy();
+
+
+            if (databaseHelper != null) {
+                OpenHelperManager.releaseHelper();
+                databaseHelper = null;
+            }
+        }
+
 }
 
+    }
+}
